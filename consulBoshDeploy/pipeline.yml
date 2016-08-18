@@ -1,0 +1,43 @@
+---
+jobs:
+- name: job-deploy
+  public: true
+  serial: true
+  plan:
+  - aggregate:
+    - get: resource-bosh-stemcell
+    - get: resource-bosh-release-consul
+    - get: resource-manifest
+  - put: resource-consul-bosh-deployment
+    params:
+      manifest: resource-manifest/manifest.yml
+      releases:
+        - resource-bosh-release-consul/dev_releases/single_consul/*.tgz
+      stemcells:
+        - resource-bosh-stemcell/*.tgz
+resources:
+- name: resource-manifest
+  type: git
+  source:
+    # uri: https://gist.github.com/395869dfd717644becf1.git # bosh-lite example
+    uri: https://github.com/natfitz/boshSingleConsulServer.git
+    # uri: https://gist.github.com/3ff87c465d483543c53d.git # AWS example
+
+- name: resource-bosh-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: {{bosh-stemcell-name}}
+
+- name: resource-bosh-release-consul
+  type: git
+  source:
+    uri: https://github.com/natfitz/boshSingleConsulServer.git
+
+- name: resource-consul-bosh-deployment
+  type: bosh-deployment
+  source:
+    target: {{bosh-target}}
+    username: {{bosh-username}}
+    password: {{bosh-password}}
+    deployment: consul-test # from the manifest.yml in resource-manifest
+    ignore_ssl: true
